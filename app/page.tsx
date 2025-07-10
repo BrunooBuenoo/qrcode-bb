@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 
 export default function QRCodeGenerator() {
-  const [url, setUrl] = useState("https://ahoikapptn.com")
-  const [qrCode, setQRCode] = useState("https://ahoikapptn.com")
+  const [url, setUrl] = useState("https://sua-url.com")
+  const [qrCode, setQRCode] = useState("https://sua-url.com")
   const [color, setColor] = useState("#000000")
   const [backgroundColor, setBackgroundColor] = useState("#ffffff")
   const [size, setSize] = useState(200)
@@ -23,7 +23,7 @@ export default function QRCodeGenerator() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">QR Code Generator</CardTitle>
