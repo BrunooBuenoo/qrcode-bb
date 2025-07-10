@@ -85,10 +85,18 @@ body {
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  html {
+    transition: background-color 1s ease-in-out, color 1s ease-in-out;
   }
+
   body {
-    @apply bg-background text-foreground;
+    transition: background-color 1s ease-in-out, color 1s ease-in-out;
+  }
+
+  * {
+    transition:
+      background-color 1s ease-in-out,
+      border-color 1s ease-in-out,
+      color 1s ease-in-out;
   }
 }

@@ -1,16 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { QRCodeSVG } from "qrcode.react"
+import jsPDF from "jspdf"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { useRef } from "react"
-import jsPDF from "jspdf"
-
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function QRCodeGenerator() {
   const [url, setUrl] = useState("https://sua-url.com")
@@ -32,7 +31,6 @@ export default function QRCodeGenerator() {
 
     const serializer = new XMLSerializer()
     const svgData = serializer.serializeToString(svg)
-
     const canvas = document.createElement("canvas")
     canvas.width = size
     canvas.height = size
@@ -57,7 +55,6 @@ export default function QRCodeGenerator() {
 
     const serializer = new XMLSerializer()
     const svgData = serializer.serializeToString(svg)
-
     const canvas = document.createElement("canvas")
     canvas.width = size
     canvas.height = size
@@ -82,7 +79,10 @@ export default function QRCodeGenerator() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      <div className="w-full max-w-2xl flex justify-end mb-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Gerador de Qr-Code</CardTitle>
@@ -94,11 +94,10 @@ export default function QRCodeGenerator() {
               <Input
                 id="url"
                 type="url"
-                placeholder="Enter a URL"
+                placeholder="Digite a URL"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
-                className="w-full"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,7 +108,6 @@ export default function QRCodeGenerator() {
                   type="color"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
-                  className="w-full h-10"
                 />
               </div>
               <div>
@@ -119,7 +117,6 @@ export default function QRCodeGenerator() {
                   type="color"
                   value={backgroundColor}
                   onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="w-full h-10"
                 />
               </div>
             </div>
@@ -134,14 +131,13 @@ export default function QRCodeGenerator() {
                 step={10}
                 value={[size]}
                 onValueChange={(value) => setSize(value[0])}
-                className="w-full"
               />
             </div>
             <div>
               <Label htmlFor="errorCorrection">Nível de correção</Label>
               <Select value={errorCorrection} onValueChange={setErrorCorrection}>
                 <SelectTrigger id="errorCorrection">
-                  <SelectValue placeholder="Select error correction level" />
+                  <SelectValue placeholder="Nível de correção" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="L">Baixo (7%)</SelectItem>
@@ -154,10 +150,9 @@ export default function QRCodeGenerator() {
             <Button type="submit" className="w-full">
               Gerar QR Code
             </Button>
-            
           </form>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col items-center gap-4">
           {qrCode && (
             <>
@@ -177,7 +172,6 @@ export default function QRCodeGenerator() {
             </>
           )}
         </CardFooter>
-
       </Card>
     </div>
   )
