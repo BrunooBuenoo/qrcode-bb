@@ -8,6 +8,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
+import { useRef } from "react"
+import jsPDF from "jspdf"
+
 
 export default function QRCodeGenerator() {
   const [url, setUrl] = useState("https://sua-url.com")
@@ -16,10 +19,66 @@ export default function QRCodeGenerator() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff")
   const [size, setSize] = useState(200)
   const [errorCorrection, setErrorCorrection] = useState("M")
+  const qrRef = useRef<SVGSVGElement | null>(null)
 
   const generateQRCode = (e: React.FormEvent) => {
     e.preventDefault()
     setQRCode(url)
+  }
+
+  const downloadQRCode = () => {
+    const svg = qrRef.current
+    if (!svg) return
+
+    const serializer = new XMLSerializer()
+    const svgData = serializer.serializeToString(svg)
+
+    const canvas = document.createElement("canvas")
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext("2d")
+
+    const img = new Image()
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0)
+      const pngUrl = canvas.toDataURL("image/png")
+
+      const link = document.createElement("a")
+      link.href = pngUrl
+      link.download = "qrcode.png"
+      link.click()
+    }
+    img.src = `data:image/svg+xml;base64,${btoa(svgData)}`
+  }
+
+  const downloadPDF = () => {
+    const svg = qrRef.current
+    if (!svg) return
+
+    const serializer = new XMLSerializer()
+    const svgData = serializer.serializeToString(svg)
+
+    const canvas = document.createElement("canvas")
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext("2d")
+
+    const img = new Image()
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0)
+      const imgData = canvas.toDataURL("image/png")
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: [size + 40, size + 40],
+      })
+
+      pdf.text("QR Code Gerado", 20, 30)
+      pdf.addImage(imgData, "PNG", 20, 50, size, size)
+      pdf.save("qrcode.pdf")
+    }
+    img.src = `data:image/svg+xml;base64,${btoa(svgData)}`
   }
 
   return (
@@ -44,7 +103,7 @@ export default function QRCodeGenerator() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="color">QR Code Color</Label>
+                <Label htmlFor="color">Cor do QR Code</Label>
                 <Input
                   id="color"
                   type="color"
@@ -54,7 +113,7 @@ export default function QRCodeGenerator() {
                 />
               </div>
               <div>
-                <Label htmlFor="backgroundColor">Background Color</Label>
+                <Label htmlFor="backgroundColor">Cor de fundo</Label>
                 <Input
                   id="backgroundColor"
                   type="color"
@@ -66,7 +125,7 @@ export default function QRCodeGenerator() {
             </div>
             <div>
               <Label htmlFor="size">
-                Size: {size}x{size}
+                Tamanho: {size}x{size}
               </Label>
               <Slider
                 id="size"
@@ -93,24 +152,32 @@ export default function QRCodeGenerator() {
               </Select>
             </div>
             <Button type="submit" className="w-full">
-              Generate QR Code
+              Gerar QR Code
             </Button>
+            
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        
+        <CardFooter className="flex flex-col items-center gap-4">
           {qrCode && (
-            <div className="mt-4">
+            <>
               <QRCodeSVG
+                ref={qrRef}
                 value={qrCode}
                 size={size}
                 fgColor={color}
                 bgColor={backgroundColor}
                 level={errorCorrection}
-                includeMargin={true}
+                includeMargin
               />
-            </div>
+              <div className="flex flex-wrap justify-center gap-4 mt-4">
+                <Button onClick={downloadQRCode}>Download em PNG</Button>
+                <Button onClick={downloadPDF} variant="secondary">Download em PDF</Button>
+              </div>
+            </>
           )}
         </CardFooter>
+
       </Card>
     </div>
   )
