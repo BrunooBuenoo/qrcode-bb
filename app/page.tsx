@@ -26,7 +26,7 @@ export default function QRCodeGenerator() {
     <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">QR Code Generator</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Gerador de Qr-Code</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={generateQRCode} className="space-y-4">
@@ -79,16 +79,16 @@ export default function QRCodeGenerator() {
               />
             </div>
             <div>
-              <Label htmlFor="errorCorrection">Error Correction Level</Label>
+              <Label htmlFor="errorCorrection">Nível de correção</Label>
               <Select value={errorCorrection} onValueChange={setErrorCorrection}>
                 <SelectTrigger id="errorCorrection">
                   <SelectValue placeholder="Select error correction level" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="L">Low (7%)</SelectItem>
-                  <SelectItem value="M">Medium (15%)</SelectItem>
-                  <SelectItem value="Q">Quartile (25%)</SelectItem>
-                  <SelectItem value="H">High (30%)</SelectItem>
+                  <SelectItem value="L">Baixo (7%)</SelectItem>
+                  <SelectItem value="M">Médio (15%)</SelectItem>
+                  <SelectItem value="Q">Quartil (25%)</SelectItem>
+                  <SelectItem value="H">Alto (30%)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

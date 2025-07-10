@@ -5,9 +5,11 @@ import type React from "react" // Import React
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "QR Code Generator",
-  description: "Generate QR codes from URLs",
-    generator: ''
+  title: "Gerador de Qr-Code",
+  description: "Gerador de Qr-Code com Url",
+    icons: {
+      icon: "/favicon.png",
+    },
 }
 
 export default function RootLayout({
