@@ -12,8 +12,8 @@ import { Slider } from "@/components/ui/slider"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function QRCodeGenerator() {
-  const [url, setUrl] = useState("https://sua-url.com")
-  const [qrCode, setQRCode] = useState("https://sua-url.com")
+  const [url, setUrl] = useState("")
+  const [qrCode, setQRCode] = useState("")
   const [color, setColor] = useState("#000000")
   const [backgroundColor, setBackgroundColor] = useState("#ffffff")
   const [size, setSize] = useState(200)
@@ -81,7 +81,6 @@ export default function QRCodeGenerator() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-2xl flex justify-end mb-4">
-        <ThemeToggle />
       </div>
       <Card className="w-full max-w-2xl">
         <CardHeader>

@@ -2,6 +2,7 @@ import "@/styles/globals.css"
 import { Inter } from "next/font/google"
 import type React from "react"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Navbar } from "@/components/ui/navbar"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,7 +23,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light">
-          {children}
+          <Navbar />
+          <main className="pt-20">{children}</main> {/* espaço para a navbar */}
         </ThemeProvider>
       </body>
     </html>
