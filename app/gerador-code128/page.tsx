@@ -35,8 +35,8 @@ export default function Code128Generator() {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    canvas.width = 320
-    canvas.height = 180
+    canvas.width = 250
+    canvas.height = 100
     const ctx = canvas.getContext("2d")
     if (ctx) {
         ctx.fillStyle = "#ffffff"
@@ -58,7 +58,8 @@ export default function Code128Generator() {
             includetext: false,
             backgroundcolor: "#FFFFFF",
             })
-
+            
+            console.log("Salvando no Firestore:", codigoFinal)
             await addDoc(collection(db, "codigos"), {
             codigo: codigoFinal,
             tipo: "code128",
@@ -101,13 +102,49 @@ export default function Code128Generator() {
     pdf.save("codigo-code128.pdf")
   }
 
-  const downloadPNG = () => {
-    if (!canvasRef.current) return
-    const link = document.createElement("a")
-    link.href = canvasRef.current.toDataURL("image/png")
-    link.download = "codigo-code128.png"
-    link.click()
-  }
+const downloadPNG = () => {
+  const originalCanvas = canvasRef.current
+  if (!originalCanvas) return
+
+  // Define dimensões finais da imagem
+  const width = 250
+  const height = 130 // aumenta um pouco para comportar o texto
+
+  // Cria um novo canvas
+  const exportCanvas = document.createElement("canvas")
+  exportCanvas.width = width
+  exportCanvas.height = height
+
+  const ctx = exportCanvas.getContext("2d")
+  if (!ctx) return
+
+  // Preenche fundo branco
+  ctx.fillStyle = "#ffffff"
+  ctx.fillRect(0, 0, width, height)
+
+  // Redesenha o código de barras na parte superior
+  ctx.drawImage(originalCanvas, 0, 0, width, 100)
+
+  // Calcula dígito final (se necessário)
+  const codigoFinal =
+    code.length === 12 && /^\d{12}$/.test(code)
+      ? calcularDigito13(code)
+      : code
+
+  // Adiciona o número centralizado abaixo do código
+  ctx.fillStyle = "#000000"
+  ctx.font = "16px monospace"
+  ctx.textAlign = "center"
+  ctx.fillText(codigoFinal, width / 2, 120)
+
+  // Salva como PNG
+  const link = document.createElement("a")
+  link.href = exportCanvas.toDataURL("image/png")
+  link.download = "codigo-code128.png"
+  link.click()
+}
+
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
@@ -141,7 +178,9 @@ export default function Code128Generator() {
               <div className="bg-white p-4 rounded">
                 <canvas
                   ref={canvasRef}
-                  style={{ width: "250px", height: "100px" }}
+                  width={320}     // resolução real
+                  height={180}    // resolução real
+                  style={{ width: "250px", height: "100px" }} // aparência na tela
                 />
               </div>
               <span className="text-sm font-mono tracking-widest">{calcularDigito13(code)}</span>
