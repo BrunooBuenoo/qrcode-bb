@@ -13,8 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { db } from "@/firebase/config" // 
-import { addDoc, collection, Timestamp } from "firebase/firestore"
+import { saveCodigoGerado } from "@/lib/saveCodigo"
 
 function calcularDigito13(codigo: string): string {
   if (!/^\d{12}$/.test(codigo)) return codigo
@@ -59,12 +58,7 @@ export default function Code128Generator() {
             backgroundcolor: "#FFFFFF",
             })
             
-            console.log("Salvando no Firestore:", codigoFinal)
-            await addDoc(collection(db, "codigos"), {
-            codigo: codigoFinal,
-            tipo: "code128",
-            createdAt: Timestamp.now(),
-            })
+            await saveCodigoGerado(codigoFinal, "code128")
         } catch (err) {
             console.error("Erro ao gerar código de barras:", err)
         }

@@ -13,8 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { db } from "@/firebase/config"
-import { addDoc, collection, Timestamp } from "firebase/firestore"
+import { saveCodigoGerado } from "@/lib/saveCodigo"
 
 export default function EAN13Generator() {
   const [ean, setEan] = useState("")
@@ -41,11 +40,7 @@ export default function EAN13Generator() {
           backgroundcolor: "#FFFFFF",
         })
 
-        await addDoc(collection(db, "codigos"), {
-          codigo: ean,
-          tipo: "ean13",
-          createdAt: Timestamp.now(),
-        })
+        await saveCodigoGerado(ean, "ean13")
       }
     } catch (error) {
       console.error("Erro ao gerar código de barras:", error)

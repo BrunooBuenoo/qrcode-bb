@@ -9,8 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { db } from "@/firebase/config"
-import { addDoc, collection, Timestamp } from "firebase/firestore"
+import { saveCodigoGerado } from "@/lib/saveCodigo"
 
 export default function QRCodeGenerator() {
   const [url, setUrl] = useState("")
@@ -19,20 +18,21 @@ export default function QRCodeGenerator() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff")
   const [size, setSize] = useState(200)
   const [errorCorrection, setErrorCorrection] = useState("M")
+  const [saveWarning, setSaveWarning] = useState("")
   const qrRef = useRef<SVGSVGElement | null>(null)
 
   const generateQRCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setQRCode(url)
+    setSaveWarning("")
 
-    try {
-      await addDoc(collection(db, "codigos"), {
-        codigo: url,
-        tipo: "qrcode",
-        createdAt: Timestamp.now(),
-      })
-    } catch (error) {
-      console.error("Erro ao salvar QR Code:", error)
+    const result = await saveCodigoGerado(url, "qrcode")
+    if (!result.saved) {
+      if (result.reason === "unauthenticated") {
+        setSaveWarning("QR gerado. Faça login para salvar no painel admin.")
+      } else if (result.reason === "permission-denied") {
+        setSaveWarning("QR gerado, mas sem permissão para salvar no Firestore.")
+      }
     }
   }
 
@@ -45,8 +45,7 @@ export default function QRCodeGenerator() {
     const canvas = document.createElement("canvas")
     canvas.width = size
     canvas.height = size
-    const ctx = canvas.getContext("2d")
-
+  import { saveCodigoGerado } from "@/lib/saveCodigo"
     const img = new Image()
     img.onload = () => {
       ctx?.drawImage(img, 0, 0)
@@ -63,15 +62,14 @@ export default function QRCodeGenerator() {
   const downloadPDF = () => {
     const svg = qrRef.current
     if (!svg) return
-
-    const serializer = new XMLSerializer()
-    const svgData = serializer.serializeToString(svg)
-    const canvas = document.createElement("canvas")
-    canvas.width = size
-    canvas.height = size
-    const ctx = canvas.getContext("2d")
-
-    const img = new Image()
+      const result = await saveCodigoGerado(url, "qrcode")
+      if (!result.saved) {
+        if (result.reason === "unauthenticated") {
+          setSaveWarning("QR gerado. Faça login para salvar no painel admin.")
+        } else if (result.reason === "permission-denied") {
+          setSaveWarning("QR gerado, mas sem permissão para salvar no Firestore.")
+        }
+      }
     img.onload = () => {
       ctx?.drawImage(img, 0, 0)
       const imgData = canvas.toDataURL("image/png")
@@ -160,6 +158,9 @@ export default function QRCodeGenerator() {
             <Button type="submit" className="w-full">
               Gerar QR Code
             </Button>
+            {saveWarning && (
+              <p className="text-sm text-amber-600">{saveWarning}</p>
+            )}
           </form>
         </CardContent>
 
