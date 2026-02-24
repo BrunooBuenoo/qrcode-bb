@@ -13,12 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { db } from "@/firebase/config"
+import { addDoc, collection, Timestamp } from "firebase/firestore"
 
 export default function EAN13Generator() {
   const [ean, setEan] = useState("")
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  const generateBarcode = (e: React.FormEvent) => {
+  const generateBarcode = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       if (canvasRef.current) {
@@ -37,6 +39,12 @@ export default function EAN13Generator() {
           includetext: true,
           textxalign: "center",
           backgroundcolor: "#FFFFFF",
+        })
+
+        await addDoc(collection(db, "codigos"), {
+          codigo: ean,
+          tipo: "ean13",
+          createdAt: Timestamp.now(),
         })
       }
     } catch (error) {

@@ -35,15 +35,20 @@ export default function UltimosCodigosPage() {
     const fetchCodigos = async () => {
       const q = query(
         collection(db, "codigos"),
-        orderBy("dataGeracao", "desc"),
+        orderBy("createdAt", "desc"),
         limit(10)
       )
       const snapshot = await getDocs(q)
       const lista = snapshot.docs.map((doc) => ({
         id: doc.id,
-        codigo: doc.data().codigo,
-        tipo: doc.data().tipo,
-        dataGeracao: doc.data().dataGeracao.toDate().toLocaleString(),
+        codigo: doc.data().codigo ?? doc.data().valor ?? "",
+        tipo: doc.data().tipo ?? "code128",
+        dataGeracao:
+          typeof doc.data().createdAt?.toDate === "function"
+            ? doc.data().createdAt.toDate().toLocaleString()
+            : typeof doc.data().dataGeracao?.toDate === "function"
+              ? doc.data().dataGeracao.toDate().toLocaleString()
+              : "Sem data",
       }))
       setCodigos(lista)
     }
@@ -88,6 +93,9 @@ export default function UltimosCodigosPage() {
             <div key={item.id} className="p-4 bg-white rounded shadow">
               <p className="font-mono text-sm mb-1">
                 <strong>Código:</strong> {item.codigo}
+              </p>
+              <p className="text-xs mb-1">
+                <strong>Tipo:</strong> {item.tipo}
               </p>
               <p className="text-xs text-muted-foreground mb-2">
                 {item.dataGeracao}

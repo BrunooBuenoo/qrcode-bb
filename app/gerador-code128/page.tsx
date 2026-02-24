@@ -63,7 +63,7 @@ export default function Code128Generator() {
             await addDoc(collection(db, "codigos"), {
             codigo: codigoFinal,
             tipo: "code128",
-            dataGeracao: Timestamp.now(),
+            createdAt: Timestamp.now(),
             })
         } catch (err) {
             console.error("Erro ao gerar código de barras:", err)

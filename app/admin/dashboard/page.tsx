@@ -7,6 +7,24 @@ import { app } from "@/firebase/config"
 export default function Dashboard() {
   const [codes, setCodes] = useState<any[]>([])
 
+  const formatDate = (dateValue: any) => {
+    if (!dateValue) return "Sem data"
+
+    if (typeof dateValue?.toDate === "function") {
+      return dateValue.toDate().toLocaleString()
+    }
+
+    if (typeof dateValue?.seconds === "number") {
+      return new Date(dateValue.seconds * 1000).toLocaleString()
+    }
+
+    if (typeof dateValue === "string") {
+      return dateValue
+    }
+
+    return "Sem data"
+  }
+
   useEffect(() => {
     const loadCodes = async () => {
       const db = getFirestore(app)
@@ -26,9 +44,10 @@ export default function Dashboard() {
         {codes.length === 0 && <p>Nenhum código encontrado.</p>}
         {codes.map(code => (
           <div key={code.id} className="border p-3 rounded bg-white shadow">
-            <p><strong>Código:</strong> {code.valor}</p>
+            <p><strong>Código:</strong> {code.codigo ?? code.valor ?? "-"}</p>
+            <p className="text-sm"><strong>Tipo:</strong> {code.tipo ?? "-"}</p>
             <p className="text-sm text-muted-foreground">
-              {new Date(code.createdAt?.seconds * 1000).toLocaleString()}
+              {formatDate(code.createdAt ?? code.dataGeracao)}
             </p>
           </div>
         ))}

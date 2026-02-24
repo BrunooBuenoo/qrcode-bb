@@ -1,0 +1,117 @@
+CREATE OR REPLACE PROCEDURE prc_envia_resumo_vendas IS
+  -- Config SMTP
+  v_connection    UTL_SMTP.connection;
+  v_smtp_server   VARCHAR2(100) := 'mail.kawakami.com.br';
+  v_smtp_port     NUMBER := 587;
+  v_sender        VARCHAR2(100) := 'noreply@kawakami.com.br';
+  v_recipient     VARCHAR2(100) := 'bruno.ti@kawakami.com.br';
+  v_username      VARCHAR2(100) := 'noreply@kawakami.com.br';
+  v_password      VARCHAR2(100) := 'Kaw@kami@2525$'; -- Substituir pela senha real
+
+  -- Datas
+  v_data_ini               DATE := TRUNC(SYSDATE, 'IW') - 7;
+  v_data_fim               DATE := TRUNC(SYSDATE, 'IW') - 1;
+  v_data_ini_ano_passado   DATE;
+  v_data_fim_ano_passado   DATE;
+  v_ano_anterior           NUMBER;
+  v_bissexto               BOOLEAN;
+  v_ajuste_ini             PLS_INTEGER;
+  v_ajuste_fim             PLS_INTEGER;
+
+  -- Mensagem
+  v_body          VARCHAR2(32000) := '';
+  v_atual         NUMBER;
+  v_passado       NUMBER;
+  v_previsao      NUMBER;
+  v_variacao      NUMBER;
+
+  -- Tipo e cursor para as lojas
+  TYPE loja_rec IS RECORD (
+    id   NUMBER,
+    nome VARCHAR2(100)
+  );
+  CURSOR c_lojas IS
+    SELECT 1 AS id, 'NORTE' AS nome FROM dual UNION ALL
+    SELECT 2, 'JRA' FROM dual UNION ALL
+    SELECT 5, 'MAX' FROM dual UNION ALL
+    SELECT 7, 'BASTOS' FROM dual UNION ALL
+    SELECT 9, 'PPA' FROM dual UNION ALL
+    SELECT 10, 'LINS' FROM dual UNION ALL
+    SELECT 11, 'PENÁPOLIS' FROM dual;
+
+  v_loja loja_rec;
+
+BEGIN
+  -- Verifica se o ano anterior foi bissexto
+  v_ano_anterior := EXTRACT(YEAR FROM v_data_ini) - 1;
+  BEGIN
+    SELECT TO_CHAR(TO_DATE(v_ano_anterior || '-02-29', 'YYYY-MM-DD'), 'MM')
+    INTO v_bissexto FROM dual;
+    v_bissexto := TRUE;
+  EXCEPTION
+    WHEN OTHERS THEN
+      v_bissexto := FALSE;
+  END;
+
+  IF v_bissexto THEN
+    v_ajuste_ini := 372;
+    v_ajuste_fim := 366;
+  ELSE
+    v_ajuste_ini := 365;
+    v_ajuste_fim := 365;
+  END IF;
+
+  v_data_ini_ano_passado := v_data_ini - v_ajuste_ini;
+  v_data_fim_ano_passado := v_data_fim - v_ajuste_fim;
+
+  -- Loop pelas lojas
+  OPEN c_lojas;
+  LOOP
+    FETCH c_lojas INTO v_loja;
+    EXIT WHEN c_lojas%NOTFOUND;
+
+    v_atual := fnc_venda_empresa(v_loja.id, v_data_ini, v_data_fim);
+    v_passado := fnc_venda_empresa(v_loja.id, v_data_ini_ano_passado, v_data_fim_ano_passado);
+    v_previsao := (
+      fnc_venda_empresa(v_loja.id, v_data_ini - 7, v_data_fim - 7) +
+      fnc_venda_empresa(v_loja.id, v_data_ini - 14, v_data_fim - 14) +
+      fnc_venda_empresa(v_loja.id, v_data_ini - 21, v_data_fim - 21) +
+      fnc_venda_empresa(v_loja.id, v_data_ini - 28, v_data_fim - 28)
+    ) / 4;
+
+    v_variacao := ROUND((v_atual - v_passado) / NULLIF(v_passado, 0) * 100, 1);
+
+    v_body := v_body ||
+      'Loja ' || v_loja.nome || ' (ID ' || v_loja.id || ')' || CHR(13) || CHR(10) ||
+      'Período atual: ' || TO_CHAR(v_data_ini, 'DD/MM/YYYY') || ' a ' || TO_CHAR(v_data_fim, 'DD/MM/YYYY') || CHR(13) || CHR(10) ||
+      'Ano anterior : ' || TO_CHAR(v_data_ini_ano_passado, 'DD/MM/YYYY') || ' a ' || TO_CHAR(v_data_fim_ano_passado, 'DD/MM/YYYY') || CHR(13) || CHR(10) ||
+      'Vendas atuais:     R$ ' || TO_CHAR(v_atual, '999G999G999D00') || CHR(13) || CHR(10) ||
+      'Ano anterior:      R$ ' || TO_CHAR(v_passado, '999G999G999D00') || CHR(13) || CHR(10) ||
+      'Variação YoY:      ' || TO_CHAR(v_variacao) || '%' || CHR(13) || CHR(10) ||
+      'Previsão próxima:  R$ ' || TO_CHAR(v_previsao, '999G999G999D00') || CHR(13) || CHR(10) ||
+      '------------------------------------------------------------' || CHR(13) || CHR(10);
+  END LOOP;
+  CLOSE c_lojas;
+
+  -- Envio do e-mail
+  BEGIN
+    v_connection := UTL_SMTP.open_connection(v_smtp_server, v_smtp_port);
+    UTL_SMTP.helo(v_connection, v_smtp_server);
+    UTL_SMTP.starttls(v_connection); -- Remova se não suportado
+    UTL_SMTP.auth(v_connection, v_username, v_password);
+    UTL_SMTP.mail(v_connection, v_sender);
+    UTL_SMTP.rcpt(v_connection, v_recipient);
+    UTL_SMTP.open_data(v_connection);
+    UTL_SMTP.write_data(v_connection, 'From: ' || v_sender || CHR(13) || CHR(10));
+    UTL_SMTP.write_data(v_connection, 'To: ' || v_recipient || CHR(13) || CHR(10));
+    UTL_SMTP.write_data(v_connection, 'Subject: Resumo Semanal de Vendas - Semana ' || TO_CHAR(v_data_ini, 'IW') || CHR(13) || CHR(10));
+    UTL_SMTP.write_data(v_connection, CHR(13) || CHR(10) || v_body);
+    UTL_SMTP.close_data(v_connection);
+    UTL_SMTP.quit(v_connection);
+    DBMS_OUTPUT.PUT_LINE('✅ E-mail enviado com sucesso!');
+  EXCEPTION
+    WHEN OTHERS THEN
+      DBMS_OUTPUT.PUT_LINE('❌ Erro no envio: ' || SQLERRM);
+  END;
+END;
+/

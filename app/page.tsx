@@ -9,7 +9,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { db } from "@/firebase/config"
+import { addDoc, collection, Timestamp } from "firebase/firestore"
 
 export default function QRCodeGenerator() {
   const [url, setUrl] = useState("")
@@ -20,9 +21,19 @@ export default function QRCodeGenerator() {
   const [errorCorrection, setErrorCorrection] = useState("M")
   const qrRef = useRef<SVGSVGElement | null>(null)
 
-  const generateQRCode = (e: React.FormEvent) => {
+  const generateQRCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setQRCode(url)
+
+    try {
+      await addDoc(collection(db, "codigos"), {
+        codigo: url,
+        tipo: "qrcode",
+        createdAt: Timestamp.now(),
+      })
+    } catch (error) {
+      console.error("Erro ao salvar QR Code:", error)
+    }
   }
 
   const downloadQRCode = () => {
