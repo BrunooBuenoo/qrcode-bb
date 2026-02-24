@@ -45,7 +45,8 @@ export default function QRCodeGenerator() {
     const canvas = document.createElement("canvas")
     canvas.width = size
     canvas.height = size
-  import { saveCodigoGerado } from "@/lib/saveCodigo"
+    const ctx = canvas.getContext("2d")
+
     const img = new Image()
     img.onload = () => {
       ctx?.drawImage(img, 0, 0)
@@ -62,14 +63,15 @@ export default function QRCodeGenerator() {
   const downloadPDF = () => {
     const svg = qrRef.current
     if (!svg) return
-      const result = await saveCodigoGerado(url, "qrcode")
-      if (!result.saved) {
-        if (result.reason === "unauthenticated") {
-          setSaveWarning("QR gerado. Faça login para salvar no painel admin.")
-        } else if (result.reason === "permission-denied") {
-          setSaveWarning("QR gerado, mas sem permissão para salvar no Firestore.")
-        }
-      }
+
+    const serializer = new XMLSerializer()
+    const svgData = serializer.serializeToString(svg)
+    const canvas = document.createElement("canvas")
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext("2d")
+
+    const img = new Image()
     img.onload = () => {
       ctx?.drawImage(img, 0, 0)
       const imgData = canvas.toDataURL("image/png")
